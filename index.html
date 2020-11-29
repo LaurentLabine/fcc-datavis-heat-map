@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <title>FCC Heat Map Challenge</title>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <script src="https://cdn.freecodecamp.org/testable-projects-fcc/v1/bundle.js"></script>
+    <div>
+    <h1 id="title">My Very Sophisticated Heat Map</h1>
+    <div id="graph"></div>
+    <div id="legend"></div>
+</div>
+
+    <script type="text/javascript">
+      
+        //Async call to data extraction and rendering
+        d3.json("https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/global-temperature.json", function(data) { 
+
+            var dataset = data.monthlyVariance
+
+            const monthsOfTheYear = ["January","February","March","April","May","June","July","August","September","October","November","December"]
+
+            for(let i = 0; i< dataset.length; i++)
+            {
+                dataset[i].monthStr = monthsOfTheYear[dataset[i].month-1]
+            }
+
+            const margin = {left: 70, right: 70, top:40, bottom: 40};
+            const w = (5 * Math.ceil(dataset.length / 12) + margin.left + margin.right)* 0.8;
+            var h = 33 * 12 + margin.top + margin.bottom ;
+
+            const svg = d3
+            .select("#graph")
+            .append("svg")
+            .attr("id","SVG")
+            .attr("width", w)
+            .attr("height", h);
+
+            const colorDomain = d3.extent(dataset, function(d){
+                return d.variance
+            });
+
+            colorScale = d3.scaleSequential()
+                .interpolator(d3.interpolateInferno)
+                .domain([d3.min(dataset,(d) => d.variance),d3.max(dataset,(d) => d.variance)])
+
+            const xScale = d3.scaleBand()
+                .domain(dataset.map(d => d.year))
+                .range([margin.left, w-(margin.left+margin.right)]);
+
+            const yScale = d3.scaleBand()
+                .domain(dataset.map(d => d.monthStr))
+                .range([h-margin.bottom, margin.top]);
+
+            const xAxisScale = d3.scaleLinear()
+                .domain([d3.min(dataset,(d) => d.year) , d3.max(dataset,(d) => d.year)])
+                .range([margin.left, w-margin.right]);
+
+            const yAxis = d3.axisLeft()
+            .tickArguments((d) => monthsOfTheYear[d.month])
+            .scale(yScale)
+            .tickSizeOuter(0)
+            .ticks(12);
+
+            const xAxis = d3.axisBottom()
+            .scale(xScale)
+            .tickSizeOuter(0)
+            .tickValues(xScale.domain().filter(function(d,i){ return !(i%10)}));
+
+            svg.append("g")
+                .attr("transform", "translate("+ (margin.left-1) + ", 0)")
+                .attr("id", "y-axis")
+                .call(yAxis)
+
+            svg.append("g")
+                .attr("transform", "translate(0," + (h - margin.bottom) + ")")
+                .attr("id","x-axis")
+                .call(xAxis);
+
+            svg.append("text")
+                .attr("id","description")
+                .attr("x", w/2)
+                .attr("y", margin.top/2)
+                .attr("text-anchor", "left")
+                .style("font-size", "22px")
+                .text("A d3.js heatmap");
+
+            var Tooltip = d3.select("#graph")
+                            .append("div")
+                            .style("opacity", 0)
+                            .attr("class", "tooltip")
+                            .attr("id","tooltip")
+                            .style("background-color", "white")
+                            .style("border", "solid")
+                            .style("border-width", "2px")
+                            .style("border-radius", "5px")
+                            .style("padding", "5px")
+
+            // Three function that change the tooltip when user hover / move / leave a cell
+            var mouseover = function(d) {
+                Tooltip
+                .style("opacity", 1)
+                d3.select(this)
+                .style("stroke", "black")
+                .style("opacity", 1)
+            }
+            var mousemove = function(d) {
+
+                Tooltip
+                .html("Year : " + d.year + "<br>Month: " + d.monthStr + "<br>Variance : " + d.variance)
+                .attr("data-year",d.year)
+                .style("top", (d3.event.pageY + 16) + "px")
+                .style("left", (d3.event.pageX + 16) + "px");
+
+            }
+            var mouseleave = function(d) {
+                Tooltip
+                .style("opacity", 0)
+                d3.select(this)
+                .style("stroke", "none")
+            }
+
+            //Data Plotting
+            var rectangles = svg.selectAll("rect")
+                .data(dataset)
+                .enter()
+                .append("rect")
+                .attr("class","cell")
+                .on("mouseover", mouseover)
+                .on("mousemove", mousemove)
+                .on("mouseleave", mouseleave);
+
+                rectangles
+                .attr("x", (d) => xScale(d.year))
+                .attr("y", (d) => yScale(d.monthStr))
+                .attr("data-month",(d) => d.month-1)
+                .attr("data-year",(d) => d.year)
+                .attr("data-temp",(d) => d.variance)
+                .attr("width",5)
+                .attr("height",33)
+                .style("fill", function(d) {
+                    return colorScale(d.variance);
+                });
+
+            var legendBarHeight = 40;
+
+                const SVGLegend = d3
+                    .select("#legend")
+                    .append("svg")
+                    .attr("id","SVGLegend")
+                    .attr("width", w)
+                    .attr("height", h/5);
+
+                SVGLegend.append("text")
+                    .attr("id","description")
+                    .attr("x", margin.left)
+                    .attr("y", margin.top/2)
+                    .attr("text-anchor", "left")
+                    .style("font-size", "16px")
+                    .text("Degrees of Variance vs normal");
+
+                var data = Array.from(Array(100).keys());
+
+                var cScale = d3.scaleSequential()//Color scales to fill the bars
+                    .interpolator(d3.interpolateInferno)
+                    .domain([0,99]);
+
+                var xLegendScale = d3.scaleLinear()//Scale to draw
+                    .domain([0,100])
+                    .range([0, 580]);
+
+                var xLegendScale2 = d3.scaleLinear()//Equivalent scale to show degrees
+                    .domain([d3.min(dataset,(d) => d.variance),d3.max(dataset,(d) => d.variance)])
+                    .range([0, 580]);
+
+                const xLegendAxis = d3.axisBottom()
+                    .tickSizeOuter(0)
+                    .scale(xLegendScale2);
+
+                    SVGLegend.append("g")
+                    .attr("transform", "translate(" + margin.left + "," + (30 + legendBarHeight) + ")")
+                    .attr("id","Legend x-axis")
+                    .call(xLegendAxis);
+
+                    SVGLegend
+                    .selectAll("rect")
+                    .data(data)
+                    .enter()
+                    .append("rect")
+                    .attr("x", (d) => margin.left + Math.floor(xLegendScale(d)))
+                    .attr("y", 30)
+                    .attr("height", legendBarHeight)
+                    .attr("width", (d) => {
+                        if (d == 99) {
+                            return 6;
+                        }
+                        return Math.floor(xLegendScale(d+1)) - Math.floor(xLegendScale(d)) + 1;
+                    })
+                    .attr("fill", (d) => cScale(d));
+        });
+
+      </script>
+</body>
+</html>
