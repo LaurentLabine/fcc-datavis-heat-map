@@ -29,7 +29,7 @@
                 dataset[i].monthStr = monthsOfTheYear[dataset[i].month - 1]
             }
 
-            const margin = { left: 70, right: 70, top: 100, bottom: 60 };
+            const margin = { left: 80, right: 70, top: 100, bottom: 60 };
             const w = (5 * Math.ceil(dataset.length / 12) + margin.left + margin.right) * 0.8;
             var h = 33 * 12 + margin.top + margin.bottom;
 
@@ -58,16 +58,17 @@
                 .attr('x', w / 2)
                 .attr('y', margin.top / 2 + 25)
                 .attr('text-anchor', 'middle')
-                .style('font-size', '16px')
+                // .style('font-size', '16px')
                 .style("fill", "#404080")
                 .text("1753 - 2015: base temperature 8.66℃");
 
             svg.append("text")
                 .attr("transform", "rotate(-90)")
                 .attr("y", 0)
-                .attr("x", 0 - (h / 2))
+                .attr("x", 0 - h / 1.7)
                 .attr("dy", "1em")
                 .style("text-anchor", "middle")
+                .style("font-size", "20px")
                 .text("Month");
 
             var datasource = svg.append("text")      // text label for the x axis
@@ -110,11 +111,13 @@
             svg.append("g")
                 .attr("transform", "translate(" + (margin.left - 1) + ", 0)")
                 .attr("id", "y-axis")
+                .style("font-size", "12px")
                 .call(yAxis)
 
             svg.append("g")
                 .attr("transform", "translate(0," + (h - margin.bottom) + ")")
                 .attr("id", "x-axis")
+                .style("font-size", "12px")
                 .call(xAxis);
 
             var Tooltip = d3.select("#container")
@@ -189,7 +192,7 @@
                 .attr("x", margin.left)
                 .attr("y", 20)
                 .attr("text-anchor", "left")
-                .style("font-size", "16px")
+                // .style("font-size", "16px")
                 .text("Variance (℃)");
 
             var data = Array.from(Array(100).keys());
