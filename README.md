@@ -1,4 +1,4 @@
-# freeCodeCamp Front End Development Libraries Projects - Project 2 - Visualize Data with a Scatterplot Graph
+# freeCodeCamp Front End Development Libraries Projects - Project 3 - Visualize Data with a Heat Map
 
 See the result here: https://laurentlabine.github.io/fcc-datavis-heat-map/
 
