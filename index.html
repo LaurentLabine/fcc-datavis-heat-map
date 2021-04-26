@@ -1,127 +1,155 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://d3js.org/d3.v4.min.js"></script>
     <title>FCC Heat Map Challenge</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="index.css">
 </head>
+
 <body>
     <script src="https://cdn.freecodecamp.org/testable-projects-fcc/v1/bundle.js"></script>
-    <div>
-    <h1 id="title">My Very Sophisticated Heat Map</h1>
-    <div id="graph"></div>
-    <div id="legend"></div>
-</div>
+    <div id="container">
+    </div>
 
     <script type="text/javascript">
-      
+
         //Async call to data extraction and rendering
-        d3.json("https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/global-temperature.json", function(data) { 
+        d3.json("https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/global-temperature.json", function (data) {
 
             var dataset = data.monthlyVariance
 
-            const monthsOfTheYear = ["January","February","March","April","May","June","July","August","September","October","November","December"]
+            const monthsOfTheYear = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
 
-            for(let i = 0; i< dataset.length; i++)
-            {
-                dataset[i].monthStr = monthsOfTheYear[dataset[i].month-1]
+            for (let i = 0; i < dataset.length; i++) {
+                dataset[i].monthStr = monthsOfTheYear[dataset[i].month - 1]
             }
 
-            const margin = {left: 70, right: 70, top:40, bottom: 40};
-            const w = (5 * Math.ceil(dataset.length / 12) + margin.left + margin.right)* 0.8;
-            var h = 33 * 12 + margin.top + margin.bottom ;
+            const margin = { left: 70, right: 70, top: 100, bottom: 60 };
+            const w = (5 * Math.ceil(dataset.length / 12) + margin.left + margin.right) * 0.8;
+            var h = 33 * 12 + margin.top + margin.bottom;
 
             const svg = d3
-            .select("#graph")
-            .append("svg")
-            .attr("id","SVG")
-            .attr("width", w)
-            .attr("height", h);
+                .select("#container")
+                .append("svg")
+                .attr("id", "SVG")
+                .attr("width", w)
+                .attr("height", h)
+                .style("display", "block")
 
-            const colorDomain = d3.extent(dataset, function(d){
+            // title
+            svg
+                .append('text')
+                .attr('id', 'title')
+                .attr('x', w / 2)
+                .attr('y', margin.top / 2)
+                .attr('text-anchor', 'middle')
+                .style('font-size', '30px')
+                .style("fill", "#404080")
+                .text('Monthly Global Land-Surface Temperature');
+
+            // subtitle
+            svg
+                .append('text')
+                .attr('x', w / 2)
+                .attr('y', margin.top / 2 + 25)
+                .attr('text-anchor', 'middle')
+                .style('font-size', '16px')
+                .style("fill", "#404080")
+                .text("1753 - 2015: base temperature 8.66℃");
+
+            svg.append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 0)
+                .attr("x", 0 - (h / 2))
+                .attr("dy", "1em")
+                .style("text-anchor", "middle")
+                .text("Month");
+
+            var datasource = svg.append("text")      // text label for the x axis
+                .attr("x", w / 2)
+                .attr("y", h - 20)
+                .style("text-anchor", "middle")
+                .text("Year");
+
+            const colorDomain = d3.extent(dataset, function (d) {
                 return d.variance
             });
 
             colorScale = d3.scaleSequential()
                 .interpolator(d3.interpolateInferno)
-                .domain([d3.min(dataset,(d) => d.variance),d3.max(dataset,(d) => d.variance)])
+                .domain([d3.min(dataset, (d) => d.variance), d3.max(dataset, (d) => d.variance)])
 
             const xScale = d3.scaleBand()
                 .domain(dataset.map(d => d.year))
-                .range([margin.left, w-(margin.left+margin.right)]);
+                .range([margin.left, w - (margin.left + margin.right)]);
 
             const yScale = d3.scaleBand()
                 .domain(dataset.map(d => d.monthStr))
-                .range([h-margin.bottom, margin.top]);
+                .range([h - margin.bottom, margin.top]);
 
             const xAxisScale = d3.scaleLinear()
-                .domain([d3.min(dataset,(d) => d.year) , d3.max(dataset,(d) => d.year)])
-                .range([margin.left, w-margin.right]);
+                .domain([d3.min(dataset, (d) => d.year), d3.max(dataset, (d) => d.year)])
+                .range([margin.left, w - margin.right]);
 
             const yAxis = d3.axisLeft()
-            .tickArguments((d) => monthsOfTheYear[d.month])
-            .scale(yScale)
-            .tickSizeOuter(0)
-            .ticks(12);
+                .tickArguments((d) => monthsOfTheYear[d.month])
+                .scale(yScale)
+                .tickSizeOuter(0)
+                .ticks(12);
 
             const xAxis = d3.axisBottom()
-            .scale(xScale)
-            .tickSizeOuter(0)
-            .tickValues(xScale.domain().filter(function(d,i){ return !(i%10)}));
+                .scale(xScale)
+                .tickSizeOuter(0)
+                .tickValues(xScale.domain().filter(function (d, i) { return !(i % 10) }));
 
             svg.append("g")
-                .attr("transform", "translate("+ (margin.left-1) + ", 0)")
+                .attr("transform", "translate(" + (margin.left - 1) + ", 0)")
                 .attr("id", "y-axis")
                 .call(yAxis)
 
             svg.append("g")
                 .attr("transform", "translate(0," + (h - margin.bottom) + ")")
-                .attr("id","x-axis")
+                .attr("id", "x-axis")
                 .call(xAxis);
 
-            svg.append("text")
-                .attr("id","description")
-                .attr("x", w/2)
-                .attr("y", margin.top/2)
-                .attr("text-anchor", "left")
-                .style("font-size", "22px")
-                .text("A d3.js heatmap");
-
-            var Tooltip = d3.select("#graph")
-                            .append("div")
-                            .style("opacity", 0)
-                            .attr("class", "tooltip")
-                            .attr("id","tooltip")
-                            .style("background-color", "white")
-                            .style("border", "solid")
-                            .style("border-width", "2px")
-                            .style("border-radius", "5px")
-                            .style("padding", "5px")
+            var Tooltip = d3.select("#container")
+                .append("div")
+                .style("opacity", 0)
+                .attr("class", "tooltip")
+                .attr("id", "tooltip")
+                .style("background-color", "white")
+                .style("border", "solid")
+                .style("border-width", "2px")
+                .style("border-radius", "5px")
+                .style("padding", "5px")
 
             // Three function that change the tooltip when user hover / move / leave a cell
-            var mouseover = function(d) {
+            var mouseover = function (d) {
                 Tooltip
-                .style("opacity", 1)
+                    .style("opacity", 1)
                 d3.select(this)
-                .style("stroke", "black")
-                .style("opacity", 1)
+                    .style("stroke", "black")
+                    .style("opacity", 1)
             }
-            var mousemove = function(d) {
+            var mousemove = function (d) {
 
                 Tooltip
-                .html("Year : " + d.year + "<br>Month: " + d.monthStr + "<br>Variance : " + d.variance)
-                .attr("data-year",d.year)
-                .style("top", (d3.event.pageY + 16) + "px")
-                .style("left", (d3.event.pageX + 16) + "px");
+                    .html("Year : " + d.year + "<br>Month: " + d.monthStr + "<br>Variance : " + d.variance)
+                    .attr("data-year", d.year)
+                    .style("top", (d3.event.pageY + 16) + "px")
+                    .style("left", (d3.event.pageX + 16) + "px");
 
             }
-            var mouseleave = function(d) {
+            var mouseleave = function (d) {
                 Tooltip
-                .style("opacity", 0)
+                    .style("opacity", 0)
                 d3.select(this)
-                .style("stroke", "none")
+                    .style("stroke", "none")
             }
 
             //Data Plotting
@@ -129,80 +157,82 @@
                 .data(dataset)
                 .enter()
                 .append("rect")
-                .attr("class","cell")
+                .attr("class", "cell")
                 .on("mouseover", mouseover)
                 .on("mousemove", mousemove)
                 .on("mouseleave", mouseleave);
 
-                rectangles
+            rectangles
                 .attr("x", (d) => xScale(d.year))
                 .attr("y", (d) => yScale(d.monthStr))
-                .attr("data-month",(d) => d.month-1)
-                .attr("data-year",(d) => d.year)
-                .attr("data-temp",(d) => d.variance)
-                .attr("width",5)
-                .attr("height",33)
-                .style("fill", function(d) {
+                .attr("data-month", (d) => d.month - 1)
+                .attr("data-year", (d) => d.year)
+                .attr("data-temp", (d) => d.variance)
+                .attr("width", 5)
+                .attr("height", 33)
+                .style("fill", function (d) {
                     return colorScale(d.variance);
                 });
 
             var legendBarHeight = 40;
 
-                const SVGLegend = d3
-                    .select("#legend")
-                    .append("svg")
-                    .attr("id","SVGLegend")
-                    .attr("width", w)
-                    .attr("height", h/5);
+            const SVGLegend = d3
+                .select("#container")
+                .append("svg")
+                .attr("id", "legend")
+                .attr("width", w)
+                .attr("height", h / 5)
+                .style("display", "block");
 
-                SVGLegend.append("text")
-                    .attr("id","description")
-                    .attr("x", margin.left)
-                    .attr("y", margin.top/2)
-                    .attr("text-anchor", "left")
-                    .style("font-size", "16px")
-                    .text("Degrees of Variance vs normal");
+            SVGLegend.append("text")
+                .attr("id", "description")
+                .attr("x", margin.left)
+                .attr("y", 20)
+                .attr("text-anchor", "left")
+                .style("font-size", "16px")
+                .text("Variance (℃)");
 
-                var data = Array.from(Array(100).keys());
+            var data = Array.from(Array(100).keys());
 
-                var cScale = d3.scaleSequential()//Color scales to fill the bars
-                    .interpolator(d3.interpolateInferno)
-                    .domain([0,99]);
+            var cScale = d3.scaleSequential()//Color scales to fill the bars
+                .interpolator(d3.interpolateInferno)
+                .domain([0, 99]);
 
-                var xLegendScale = d3.scaleLinear()//Scale to draw
-                    .domain([0,100])
-                    .range([0, 580]);
+            var xLegendScale = d3.scaleLinear()//Scale to draw
+                .domain([0, 100])
+                .range([0, 580]);
 
-                var xLegendScale2 = d3.scaleLinear()//Equivalent scale to show degrees
-                    .domain([d3.min(dataset,(d) => d.variance),d3.max(dataset,(d) => d.variance)])
-                    .range([0, 580]);
+            var xLegendScale2 = d3.scaleLinear()//Equivalent scale to show degrees
+                .domain([d3.min(dataset, (d) => d.variance), d3.max(dataset, (d) => d.variance)])
+                .range([0, 580]);
 
-                const xLegendAxis = d3.axisBottom()
-                    .tickSizeOuter(0)
-                    .scale(xLegendScale2);
+            const xLegendAxis = d3.axisBottom()
+                .tickSizeOuter(0)
+                .scale(xLegendScale2);
 
-                    SVGLegend.append("g")
-                    .attr("transform", "translate(" + margin.left + "," + (30 + legendBarHeight) + ")")
-                    .attr("id","Legend x-axis")
-                    .call(xLegendAxis);
+            SVGLegend.append("g")
+                .attr("transform", "translate(" + margin.left + "," + (30 + legendBarHeight) + ")")
+                .attr("id", "Legend x-axis")
+                .call(xLegendAxis);
 
-                    SVGLegend
-                    .selectAll("rect")
-                    .data(data)
-                    .enter()
-                    .append("rect")
-                    .attr("x", (d) => margin.left + Math.floor(xLegendScale(d)))
-                    .attr("y", 30)
-                    .attr("height", legendBarHeight)
-                    .attr("width", (d) => {
-                        if (d == 99) {
-                            return 6;
-                        }
-                        return Math.floor(xLegendScale(d+1)) - Math.floor(xLegendScale(d)) + 1;
-                    })
-                    .attr("fill", (d) => cScale(d));
+            SVGLegend
+                .selectAll("rect")
+                .data(data)
+                .enter()
+                .append("rect")
+                .attr("x", (d) => margin.left + Math.floor(xLegendScale(d)))
+                .attr("y", 30)
+                .attr("height", legendBarHeight)
+                .attr("width", (d) => {
+                    if (d == 99) {
+                        return 6;
+                    }
+                    return Math.floor(xLegendScale(d + 1)) - Math.floor(xLegendScale(d)) + 1;
+                })
+                .attr("fill", (d) => cScale(d));
         });
 
-      </script>
+    </script>
 </body>
+
 </html>
