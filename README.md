@@ -2,6 +2,8 @@
 
 See the result here: https://laurentlabine.github.io/fcc-datavis-heat-map/
 
+Thumbnail available here : https://user-images.githubusercontent.com/20836468/118497553-76d0cb00-b725-11eb-81ae-754451880170.png
+
 I built this project as part of freeCodeCamp's curriculum to learn and practice Data Visualization using D3.js library.
 
 The data represents the monthly global land surface Temperature recorded over the years from 1760 to 2015 and can be found here : https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/global-temperature.json.
